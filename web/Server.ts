@@ -115,6 +115,35 @@ export class WebServer {
             }
         }
     }
+
+    public getNetworkInterfaces() {
+        const networkInterfaces = os.networkInterfaces();
+        // RKS: We need to get the scope-local nics. This has nothing to do with IP4/6 and is not necessarily named en0 or specific to a particular nic.  We are
+        // looking for the first IPv4 interface that has a mac address which will be the scope-local address.  However, in the future we can simply use the IPv6 interface
+        // if that is returned on the local scope but I don't know if the node ssdp server supports it on all platforms.
+        let ips = [];
+        let nics = { physical: [], virtual: [] }
+        for (let name in networkInterfaces) {
+            let nic = networkInterfaces[name];
+            for (let ndx in nic) {
+                let addr = nic[ndx];
+                // All scope-local addresses will have a mac.  In a multi-nic scenario we are simply grabbing
+                // the first one we come across.
+                if (!addr.internal && addr.mac.indexOf('00:00:00:') < 0 && addr.family === this.family) {
+                    if (typeof ips.find((x) => x === addr.address) === 'undefined') {
+                        ips.push(addr.address);
+                        if (!addr.mac.startsWith('00:'))
+                            nics.physical.push(extend(true, { name: name }, addr));
+                        else
+                            nics.virtual.push(extend(true, { name: name }, addr));
+                    }
+                }
+            }
+        }
+        return nics;
+    }
+
+
     public ip() { return typeof this.getInterface() === 'undefined' ? '0.0.0.0' : this.getInterface().address; }
     public mac() { return typeof this.getInterface() === 'undefined' ? '00:00:00:00' : this.getInterface().mac; }
     public httpPort(): number { return this._httpPort }
@@ -309,7 +338,7 @@ export class HttpServer extends ProtoServer {
 }
 export class SsdpServer extends ProtoServer {
     // Simple service discovery protocol
-    public server: any; //node-ssdp;
+    public server: ssdp.Server; //node-ssdp;
     public deviceUUID: string;
     public upnpPath: string;
     public modelName: string;
@@ -328,34 +357,44 @@ export class SsdpServer extends ProtoServer {
             // todo: should probably check if http/https is enabled at this point
             let port = config.getSection('web').servers.http.port || 8080;
             this.upnpPath = 'http://' + webApp.ip() + ':' + port + '/upnp.xml';
+
+            let nics = webApp.getNetworkInterfaces();
             let SSDP = ssdp.Server;
-            this.server = new SSDP({
-                //customLogger: (...args) => console.log.apply(null, args),
-                logLevel: 'INFO',
-                udn: this.deviceUUID,
-                location: this.upnpPath,
-                sourcePort: 1900
-            });
+            if (nics.physical.length + nics.virtual.length > 1) {
+                // If there are multiple nics (docker...etc) then
+                // this will bind on all of them.
+                this.server = new SSDP({
+                    //customLogger: (...args) => console.log.apply(null, args),
+                    logLevel: 'INFO',
+                    udn: this.deviceUUID,
+                    location: {
+                        protocol: 'http://',
+                        port: webApp.httpPort(),
+                        path: '/upnp.xml'
+                    },
+                    explicitSocketBind: true,
+                    sourcePort: 1900
+                });
+            }
+            else {
+                this.server = new SSDP({
+                    //customLogger: (...args) => console.log.apply(null, args),
+                    logLevel: 'INFO',
+                    udn: this.deviceUUID,
+                    location: this.upnpPath,
+                    sourcePort: 1900
+                });
+
+
+            }
             this.server.addUSN('upnp:rootdevice'); // This line will make the server show up in windows.
             this.server.addUSN(this.deviceType);
             // start the server
-            try {
-                const startResult = this.server.start();
-                if (startResult && typeof startResult.then === 'function') {
-                    startResult
-                        .then(function () {
-                            logger.silly('SSDP/UPnP Server started.');
-                            self.isRunning = true;
-                        })
-                        .catch(err => logger.error(`Error starting SSDP Server ${err.message}`));
-                } else {
-                    // Some node-ssdp code paths return void instead of a Promise.
+            this.server.start()
+                .then(function () {
                     logger.silly('SSDP/UPnP Server started.');
                     self.isRunning = true;
-                }
-            } catch (err) {
-                logger.error(`Error starting SSDP Server ${err.message}`);
-            }
+                });
 
             this.server.on('error', function (e) {
                 logger.error('error from SSDP:', e);
