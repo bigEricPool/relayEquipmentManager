@@ -13,6 +13,11 @@ import { LatchTimers, AnalogDevices } from "../devices/AnalogDevices";
 import * as fs from 'fs';
 
 export class SequentIO extends i2cDeviceBase {
+    // Declared here (not initialized) so closeAsync() below can flush it on shutdown --
+    // each relay-capable subclass (Sequent4RelIND, Sequent4Rel4In, etc.) declares its own
+    // `protected latches = new LatchTimers();` instance, which is what this resolves to
+    // at runtime.
+    protected latches: LatchTimers;
     protected regs = {
         rs485Settings: 65,
         hwVersion: 120,  // 120 & 121 = major.(minor/100)
@@ -357,6 +362,10 @@ export class SequentIO extends i2cDeviceBase {
     public async closeAsync(): Promise<void> {
         try {
             await this.stopPolling();
+            // Flush any pending relay latch timers now instead of leaving them to expire on
+            // their own -- without this, a clean shutdown never actually turns the relays off,
+            // they just get abandoned mid-latch when the process exits.
+            if (typeof this.latches !== 'undefined') await this.latches.close(true);
             await super.closeAsync();
             return Promise.resolve();
         }

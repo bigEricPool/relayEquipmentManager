@@ -202,7 +202,10 @@ export class LatchTimers extends Array<LatchTimer> {
         try {
             for (let i = this.length - 1; i >= 0; i--) {
                 let lt = this[i];
-                try { lt.unlatch(); } catch (err) { console.log(`Error closing latch timer ${lt.id}: ${err.message}`); }
+                // unlatch() is async and does the actual "turn the relay off" write -- it must be
+                // awaited here, or the caller's closeAsync() returns (and goes on to close the bus)
+                // before that write ever completes, silently dropping it on shutdown.
+                try { await lt.unlatch(); } catch (err) { console.log(`Error closing latch timer ${lt.id}: ${err.message}`); }
             }
             this.length = 0;
         } catch (err) { console.log(`Error closing latch timers`); }
