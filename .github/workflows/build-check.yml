@@ -42,5 +42,7 @@ jobs:
         with:
           node-version: '22'
           cache: npm
-      - run: npm ci
+      # The relay hardware modules (GPIO, I2C, SPI) are native and need libraries this runner does not have.
+      # They are not needed to compile the TypeScript, so their build scripts are skipped here.
+      - run: npm ci --ignore-scripts
       - run: npm run build
