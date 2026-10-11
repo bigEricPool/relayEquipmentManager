@@ -1,0 +1,69 @@
+{
+  "repository": "bigEricPool/relayEquipmentManager",
+  "upstream": "rstrouse/relayEquipmentManager",
+  "base": "master at 2460fae",
+  "companion": "bigEricPool/nodejs-poolController",
+  "statuses": {
+    "active": "in use",
+    "legacy": "exists, being replaced",
+    "archive": "kept for history"
+  },
+  "branches": [
+    {
+      "name": "master",
+      "kind": "mirror",
+      "status": "active",
+      "purpose": "Untouched copy of the original project's master.",
+      "depends": [],
+      "upstream": "",
+      "build": true
+    },
+    {
+      "name": "pool",
+      "kind": "integration",
+      "status": "active",
+      "purpose": "Everything together; the branch the pool controller is to run. Built from the branches below, never edited directly. Same content as autoswg-rem.",
+      "depends": [
+        "local/npm"
+      ],
+      "upstream": "",
+      "build": true
+    },
+    {
+      "name": "local/npm",
+      "kind": "local",
+      "status": "active",
+      "purpose": "package.json allowScripts and the audit-fix lock file. Not for upstream.",
+      "depends": [],
+      "upstream": "",
+      "build": true
+    },
+    {
+      "name": "autoswg-rem",
+      "kind": "integration",
+      "status": "legacy",
+      "purpose": "The branch the pool controller runs today: master plus the package update. Replaced by pool.",
+      "depends": [],
+      "upstream": "",
+      "build": true
+    },
+    {
+      "name": "fix/relay-shutdown",
+      "kind": "archive",
+      "status": "archive",
+      "purpose": "Relays off on a clean shutdown. Superseded: the owner merged his own fix.",
+      "depends": [],
+      "upstream": "rstrouse/relayEquipmentManager#124 (closed)",
+      "build": false
+    },
+    {
+      "name": "fix/ssdp",
+      "kind": "archive",
+      "status": "archive",
+      "purpose": "SSDP server start-up on a host with several network interfaces. Superseded: fixed by the owner.",
+      "depends": [],
+      "upstream": "rstrouse/relayEquipmentManager#125 (closed)",
+      "build": false
+    }
+  ]
+}
