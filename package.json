@@ -50,5 +50,12 @@
     "socket.io-client": "^4.5.0",
     "spi-device": "^3.1.2",
     "winston": "^3.15.0"
+  },
+  "allowScripts": {
+    "@bratbit/onoff@1.0.7": true,
+    "epoll@4.0.1": true,
+    "i2c-bus@5.2.2": true,
+    "spi-device@3.1.2": true,
+    "@fortawesome/fontawesome-free@5.15.4": true
   }
 }
