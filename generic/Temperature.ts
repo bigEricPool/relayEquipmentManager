@@ -107,6 +107,8 @@ export class Thermistor10k extends GenericDeviceBase {
         // Resistance-based path: convert ADC value → resistance → temperature.
         device.values.inputUnits = device.options.inputType === 'raw' ? '' : device.options.inputType === 'volt' ? 'volts' : device.options.inputResistanceUnits === 1000 ? 'kOhms' : 'ohms';
         device.values.maxVal = (device.options.inputType === 'raw') ? (1 << device.options.inputBitness) : device.options.inputType === 'volt' ? device.options.vccRef : 10000;
+        // The resistor between the input and the reference voltage. Boards differ (15k on the Sequent Home Automation), so it is an option; 10k when not set.
+        const pullup = parseFloat(device.options.pullupResistance) > 0 ? parseFloat(device.options.pullupResistance) : 10000;
         switch (device.options.inputType) {
             case 'ohms':
                 device.values.resistance = device.values.adcValue * device.options.inputResistanceUnits;
@@ -116,7 +118,7 @@ export class Thermistor10k extends GenericDeviceBase {
                 break;
             case 'raw':
             case 'volt':
-                device.values.resistance = 10000 * (device.values.adcValue / (device.values.maxVal - device.values.adcValue));
+                device.values.resistance = pullup * (device.values.adcValue / (device.values.maxVal - device.values.adcValue));
                 break;
         }
         switch (device.options.calcType) {
