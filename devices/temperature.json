@@ -1386,6 +1386,32 @@
                       }
                     }
                   ]
+                },
+                {
+                  "field": {
+                    "type": "valueSpinner",
+                    "labelText": "Pull-up",
+                    "binding": "options.pullupResistance",
+                    "canEdit": "true",
+                    "value": 10000,
+                    "min": 100,
+                    "max": 1000000,
+                    "step": 100,
+                    "dataType": "number",
+                    "fmtMask": "#,##0",
+                    "emptyMask": "-",
+                    "units": "ohms (Raw and Volts inputs)",
+                    "labelAttrs": {
+                      "style": {
+                        "width": "5rem"
+                      }
+                    },
+                    "inputAttrs": {
+                      "style": {
+                        "width": "5rem"
+                      }
+                    }
+                  }
                 }
               ]
             },
