@@ -11,8 +11,9 @@ Base for new branches: master at 2460fae.
 | Branch | Kind | Purpose | Depends on | Related report |
 |---|---|---|---|---|
 | `master` | mirror | Untouched copy of the original project's master. | none | none |
-| `pool` | integration | Everything together; the branch the pool controller is to run. Built from the branches below, never edited directly. Same content as autoswg-rem. | local/npm | none |
+| `pool` | integration | Everything together; the branch the pool controller is to run. Built from the branches below, never edited directly. | local/npm, feature/thermistor-pullup | none |
 | `local/npm` | local | package.json allowScripts and the audit-fix lock file. Not for upstream. | none | none |
+| `feature/thermistor-pullup` | feature | A Pull-up setting on the 10k temperature probe (default 10,000 ohms); the Sequent Home Automation card has 15k on each analog input. | none | none |
 
 ## Being replaced
 
